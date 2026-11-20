@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
 }
 
 android {
@@ -15,6 +17,7 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildFeatures {
@@ -31,6 +34,10 @@ kotlin {
     jvmToolchain(17)
 }
 
+room {
+    schemaDirectory("$projectDir/schemas")
+}
+
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
@@ -38,7 +45,11 @@ dependencies {
     implementation(libs.ktor.client.okhttp)
     implementation(libs.kotlinx.serialization.json)
     coreLibraryDesugaring(libs.desugar)
+    implementation(libs.room.runtime)
+    ksp(libs.room.compiler)
 
     testImplementation(libs.junit)
     testImplementation(libs.mockwebserver)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.junit)
 }

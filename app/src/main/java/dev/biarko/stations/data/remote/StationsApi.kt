@@ -24,18 +24,18 @@ import java.time.format.DateTimeParseException
 internal class StationsApi(
     private val stationsUrl: Url = Url("https://test-ucs-mock-api.vercel.app/api/v1/stations"),
     timeoutMillis: Long = 12_000,
-) : Closeable {
+) : StationService, Closeable {
     private val json = Json { ignoreUnknownKeys = true }
     private val client = HttpClient(OkHttp) {
         expectSuccess = true
         install(HttpTimeout) { requestTimeoutMillis = timeoutMillis }
     }
 
-    suspend fun stations(): List<Station> = get(stationsUrl) { body ->
+    override suspend fun stations(): List<Station> = get(stationsUrl) { body ->
         json.decodeFromString<List<StationDto>>(body).map(StationDto::toStation)
     }
 
-    suspend fun devices(stationId: StationId): List<Device> {
+    override suspend fun devices(stationId: StationId): List<Device> {
         val url = URLBuilder(stationsUrl).apply {
             appendPathSegments(stationId.value, "devices", encodeSlash = true)
         }.build()
