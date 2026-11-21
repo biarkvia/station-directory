@@ -19,3 +19,21 @@ From the repository root on Windows, with an emulator running or a device connec
 
 On macOS or Linux, use `./gradlew` and `"$ANDROID_HOME/platform-tools/adb"`.
 The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`.
+
+## Tests
+
+Run the domain and HTTP tests on the JVM, then run the Room and Compose tests
+with one Android emulator or device connected:
+
+```powershell
+.\gradlew.bat :app:testDebugUnitTest :app:connectedDebugAndroidTest
+```
+
+To generate JaCoCo reports for both suites:
+
+```powershell
+.\gradlew.bat -Pcoverage=true :app:createDebugUnitTestCoverageReport :app:createDebugAndroidTestCoverageReport
+```
+
+Open `app/build/reports/coverage/test/debug/index.html` for JVM coverage and
+`app/build/reports/coverage/androidTest/debug/connected/index.html` for device coverage.

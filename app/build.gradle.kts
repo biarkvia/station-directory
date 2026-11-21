@@ -20,6 +20,14 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    buildTypes {
+        debug {
+            val coverage = providers.gradleProperty("coverage").orNull.toBoolean()
+            enableUnitTestCoverage = coverage
+            enableAndroidTestCoverage = coverage
+        }
+    }
+
     buildFeatures {
         compose = true
     }

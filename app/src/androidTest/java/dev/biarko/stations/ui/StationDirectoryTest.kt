@@ -26,7 +26,12 @@ import dev.biarko.stations.domain.DeviceType
 import dev.biarko.stations.domain.Station
 import dev.biarko.stations.domain.StationId
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.job
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -60,12 +65,15 @@ class StationDirectoryTest {
         database.close()
     }
 
-    private fun openDirectory() {
+    private fun createRepository(): StationRepository {
         val source = object : StationService {
             override suspend fun stations() = fetchStations()
             override suspend fun devices(stationId: StationId) = fetchDevices(stationId)
         }
-        val repository = StationRepository(database, source)
+        return StationRepository(database, source)
+    }
+
+    private fun openDirectory(repository: StationRepository = createRepository()) {
         compose.setContent { DirectoryTheme { StationDirectory(repository) } }
     }
 
@@ -130,7 +138,7 @@ class StationDirectoryTest {
     }
 
     @Test
-    fun pullingToRefreshKeepsTheCatalogVisibleAndRetryReplacesIt() {
+    fun pullingToRefreshKeepsTheCatalogVisibleAfterHttp503AndRetryReplacesIt() {
         openDirectory()
         awaitText("Praha")
         val response = CompletableDeferred<List<Station>>()
@@ -144,8 +152,9 @@ class StationDirectoryTest {
         compose.onNode(hasScrollAction()).performTouchInput { swipeDown() }
         compose.waitUntil(5_000) { requestStarted.isCompleted }
         compose.onNodeWithText("Praha").assertIsDisplayed()
-        response.completeExceptionally(failure)
+        response.completeExceptionally(StationApiException.Http("/api/v1/stations", 503, IOException("Unavailable")))
         awaitText("Showing saved data")
+        compose.onNodeWithText("The server couldn’t complete the request. Try again.").assertIsDisplayed()
         compose.onNodeWithText("Praha").assertIsDisplayed()
         compose.runOnIdle { fetchStations = { listOf(brno) } }
         compose.onNodeWithText("Retry").performClick()
@@ -176,5 +185,66 @@ class StationDirectoryTest {
         compose.onNodeWithContentDescription("Refresh").performClick()
         awaitText("Showing saved data")
         compose.onNodeWithText("Charger").assertIsDisplayed()
+    }
+
+    @Test
+    fun latePragueResponseCannotReplaceDevicesOnTheBrnoScreen() {
+        val started = CompletableDeferred<Unit>()
+        val response = CompletableDeferred<List<Device>>()
+        val refreshFinished = CompletableDeferred<Unit>()
+        fetchDevices = { id ->
+            if (id == prague.id) {
+                currentCoroutineContext().job.invokeOnCompletion { refreshFinished.complete(Unit) }
+                started.complete(Unit)
+                withContext(NonCancellable) { response.await() }
+            } else {
+                listOf(office)
+            }
+        }
+
+        try {
+            openDirectory()
+            awaitText("Praha")
+            compose.onNodeWithText("Praha").performClick()
+            compose.waitUntil(5_000) { started.isCompleted }
+            compose.onNodeWithContentDescription("Back to stations").performClick()
+            awaitText("Brno")
+            compose.onNodeWithText("Brno").performClick()
+            awaitText("Backoffice")
+            response.complete(listOf(till))
+            compose.waitUntil(5_000) { refreshFinished.isCompleted }
+            compose.onNodeWithText("Brno").assertIsDisplayed()
+            compose.onNodeWithText("Backoffice").assertIsDisplayed()
+            compose.onNodeWithText("Pokladna").assertDoesNotExist()
+        } finally {
+            response.complete(listOf(till))
+        }
+    }
+
+    @Test
+    fun offlineCatalogDistinguishesAnUnvisitedStationFromASavedEmptyList() {
+        val repository = createRepository()
+        runBlocking {
+            repository.refreshStations()
+            repository.refreshDevices(brno.id)
+        }
+        fetchStations = { throw failure }
+        fetchDevices = { throw failure }
+        openDirectory(repository)
+        awaitText("Showing saved data")
+        compose.onNodeWithText("Brno").performClick()
+        awaitText("No devices at this station")
+        awaitText("Showing saved data")
+        compose.onNodeWithContentDescription("Back to stations").performClick()
+        awaitText("Praha")
+        compose.onNodeWithText("Praha").performClick()
+        awaitText("No saved device list for this station")
+        compose.onNodeWithText("No devices at this station").assertDoesNotExist()
+
+        compose.runOnIdle { fetchDevices = { listOf(till) } }
+        compose.onNodeWithText("Retry").performClick()
+        awaitText("Pokladna")
+        compose.onNodeWithText("No saved device list for this station").assertDoesNotExist()
+        compose.onNodeWithText("Showing saved data").assertDoesNotExist()
     }
 }
