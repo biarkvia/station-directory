@@ -42,6 +42,9 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.navigation3.ui)
+    implementation(libs.lifecycle.navigation3)
+    implementation(libs.lifecycle.runtime.compose)
     implementation(libs.ktor.client.okhttp)
     implementation(libs.kotlinx.serialization.json)
     coreLibraryDesugaring(libs.desugar)
@@ -52,4 +55,7 @@ dependencies {
     testImplementation(libs.mockwebserver)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.junit)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.compose.ui.test)
+    debugImplementation(libs.compose.test.manifest)
 }

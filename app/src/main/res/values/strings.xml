@@ -1,4 +1,43 @@
 <resources>
     <string name="app_name">Station Directory</string>
     <string name="stations_title">Stations</string>
+    <string name="devices_title">Devices</string>
+    <string name="back">Back to stations</string>
+    <string name="refresh">Refresh</string>
+    <string name="retry">Retry</string>
+    <string name="loading">Loading…</string>
+    <string name="refreshing">Refreshing…</string>
+    <string name="saved_data">Showing saved data</string>
+    <string name="no_saved_stations">No saved station list</string>
+    <string name="no_saved_devices">No saved device list for this station</string>
+    <string name="connection_error">Couldn’t reach the server. Check your connection and try again.</string>
+    <string name="server_error">The server couldn’t complete the request. Try again.</string>
+    <string name="response_error">The server returned unreadable data. Try again.</string>
+    <string name="storage_error">Couldn’t access local storage. Try again.</string>
+    <string name="empty_stations">No stations in the directory</string>
+    <string name="empty_devices">No devices at this station</string>
+    <string name="station_removed">This station is no longer in the directory.</string>
+    <string name="all_statuses">All</string>
+    <string name="online">Online</string>
+    <string name="offline">Offline</string>
+    <string name="device_error">Error</string>
+    <string name="no_matching_devices">No devices with status “%1$s”</string>
+    <string name="clear_filter">Show all devices</string>
+    <string name="filtered_count">Devices · %1$d of %2$d</string>
+    <string name="last_seen">Last seen %1$s</string>
+    <string name="last_seen_unknown">Last seen unknown</string>
+    <string name="station_address">%1$s · %2$s</string>
+    <string name="directory_summary">%1$s · %2$s</string>
+    <plurals name="station_count">
+        <item quantity="one">%d station</item>
+        <item quantity="other">%d stations</item>
+    </plurals>
+    <plurals name="country_count">
+        <item quantity="one">%d country</item>
+        <item quantity="other">%d countries</item>
+    </plurals>
+    <plurals name="device_count">
+        <item quantity="one">%d device</item>
+        <item quantity="other">%d devices</item>
+    </plurals>
 </resources>
