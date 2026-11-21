@@ -7,6 +7,14 @@ plugins {
     alias(libs.plugins.room)
 }
 
+val firebaseEnabled = file("google-services.json").isFile
+val crashProbe = providers.gradleProperty("crashProbe").orNull.toBoolean()
+require(!crashProbe || firebaseEnabled) { "The crash probe requires app/google-services.json" }
+if (firebaseEnabled) {
+    apply(plugin = "com.google.gms.google-services")
+    apply(plugin = "com.google.firebase.crashlytics")
+}
+
 android {
     namespace = "dev.biarko.stations"
     compileSdk = 36
@@ -25,6 +33,19 @@ android {
             val coverage = providers.gradleProperty("coverage").orNull.toBoolean()
             enableUnitTestCoverage = coverage
             enableAndroidTestCoverage = coverage
+        }
+        release {
+            if (crashProbe) versionNameSuffix = "-probe"
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+    }
+
+    if (crashProbe) {
+        sourceSets.getByName("release") {
+            java.srcDir("src/crashProbe/java")
+            manifest.srcFile("src/crashProbe/AndroidManifest.xml")
         }
     }
 
@@ -58,6 +79,10 @@ dependencies {
     coreLibraryDesugaring(libs.desugar)
     implementation(libs.room.runtime)
     ksp(libs.room.compiler)
+    if (firebaseEnabled) {
+        releaseImplementation(platform(libs.firebase.bom))
+        releaseImplementation(libs.firebase.crashlytics)
+    }
 
     testImplementation(libs.junit)
     testImplementation(libs.mockwebserver)
