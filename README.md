@@ -14,6 +14,9 @@ location set with `sdk.dir` in `local.properties`. The Gradle Wrapper downloads 
 
 Clone the repository, connect an Android device or start an emulator (API 24+),
 and run the following from PowerShell. The debug build needs no account or API key.
+If you already installed the release APK, use a second emulator to keep its
+offline data. Both builds use the same package name with different signing keys,
+so Android requires an uninstall before switching builds on one device.
 
 ```powershell
 git clone https://github.com/biarkvia/station-directory.git
